@@ -1814,6 +1814,10 @@ class ServerDelegate {
 		let text = ServerDelegate.bodyString(body, "text") ?? ""
 		let subject = ServerDelegate.bodyString(body, "subject") ?? ""
 		let from = (ServerDelegate.bodyString(body, "from") ?? req.query["from"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+		let service = ServerDelegate.bodyString(body, "service") ?? req.query["service"] ?? ""
+		guard service.isEmpty || service == "iMessage" || service == "SMS" else {
+			throw APIError.badRequest("service must be iMessage or SMS")
+		}
 
 		var photos = [String]()
 		if let list = body["photos"] as? [Any] {
@@ -1836,6 +1840,9 @@ class ServerDelegate {
 		if !from.isEmpty {
 			params["from"] = from
 		}
+		if !service.isEmpty {
+			params["service"] = service
+		}
 
 		Const.log("event=message.send chat=\(chat_id) text_len=\(text.count) subject_len=\(subject.count) photos=\(photos.count) files=\(files.count) from_given=\(!from.isEmpty) ip=\(ip)")
 
@@ -1848,6 +1855,9 @@ class ServerDelegate {
 				details["current"] = current
 			}
 			throw APIError.invalidSender(ServerDelegate.sendFailureMessage(outcome.reason), details: details)
+		}
+		if outcome.reason == "service_mismatch" {
+			throw APIError(409, "service_mismatch", "This conversation would be sent over \(outcome.service ?? "another service"), not \(service). Nothing was sent.", details: ["required": service, "current": ServerDelegate.orNull(outcome.service)])
 		}
 		switch outcome.code {
 			case 200:
@@ -2083,6 +2093,7 @@ class ServerDelegate {
 		let address: String = params["chat"] as? String ?? ""
 		var subject: String = params["subject"] as? String ?? ""
 		let from: String = (params["from"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+		let service: String = params["service"] as? String ?? ""
 		var files = new_files
 
 		#if os(iOS)
@@ -2107,7 +2118,7 @@ class ServerDelegate {
 			return SendOutcome(code: 400, reason: nil, service: nil, from: nil)
 		}
 
-		let result = ServerDelegate.sender.sendText(body, subject: subject, toAddress: address, from: from.isEmpty ? nil : from, attachments: files) ?? [AnyHashable: Any]()
+		let result = ServerDelegate.sender.sendText(body, subject: subject, toAddress: address, from: from.isEmpty ? nil : from, service: service.isEmpty ? nil : service, attachments: files) ?? [AnyHashable: Any]()
 		let ok = result["ok"] as? Bool ?? false
 		let outcome = SendOutcome(
 			code: ok ? 200 : 503,

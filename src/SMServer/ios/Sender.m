@@ -148,12 +148,17 @@ static BOOL SMSBoolResult(id result) {
 }
 
 - (NSDictionary *)sendText:(NSString *)body subject:(NSString *)subject toAddress:(NSString *)address from:(NSString *)from attachments:(NSArray *)paths {
+	return [self sendText:body subject:subject toAddress:address from:from service:nil attachments:paths];
+}
+
+- (NSDictionary *)sendText:(NSString *)body subject:(NSString *)subject toAddress:(NSString *)address from:(NSString *)from service:(NSString *)service attachments:(NSArray *)paths {
 	NSMutableArray *files = [NSMutableArray array];
 	for (id path in paths ?: @[]) {
 		if ([path isKindOfClass:[NSString class]]) [files addObject:path];
 	}
 	NSMutableDictionary *args = [NSMutableDictionary dictionaryWithDictionary:@{@"body": body ?: @"", @"subject": subject ?: @"", @"address": address ?: @"", @"attachment": files}];
 	if (from.length) args[@"from"] = from;
+	if (service.length) args[@"service"] = service;
 	id result = SMSCallSpringBoard(@"sendText", args, SMSSendTimeout);
 	BOOL ok = SMSBoolResult(result);
 	NSMutableDictionary *outcome = [NSMutableDictionary dictionaryWithObject:@(ok) forKey:@"ok"];

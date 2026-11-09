@@ -793,6 +793,7 @@ static NSString *SMSSentFromAddress(IMChat *chat, IMMessage *message) {
 	NSString *body = SMSStringArg(vals, @"body") ?: @"";
 	NSString *subject = SMSStringArg(vals, @"subject") ?: @"";
 	NSString *from = [SMSStringArg(vals, @"from") stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	NSString *requiredService = SMSStringArg(vals, @"service");
 	id rawAttachments = [vals isKindOfClass:[NSDictionary class]] ? vals[@"attachment"] : nil;
 	NSArray *attachments = [rawAttachments isKindOfClass:[NSArray class]] ? rawAttachments : @[];
 	SMSLog(@"event=send_text_request body_length=%lu subject_length=%lu attachments=%lu from=%@", (unsigned long)body.length, (unsigned long)subject.length, (unsigned long)attachments.count, from.length ? SMSAddressType(from) : @"none");
@@ -828,6 +829,10 @@ static NSString *SMSSentFromAddress(IMChat *chat, IMMessage *message) {
 		}
 		IMAccount *chatAccount = [chat respondsToSelector:@selector(account)] ? [chat account] : nil;
 		NSString *service = SMSAccountService(chatAccount);
+		if (requiredService.length && ![service isEqualToString:requiredService]) {
+			SMSLog(@"event=send_text_rejected reason=service_mismatch required=%@ service=%@", requiredService, service);
+			return SMSSendResult(NO, @"service_mismatch", service, nil);
+		}
 		if (sender) {
 			NSString *senderFailure = SMSApplySender(chat, sender);
 			if (senderFailure) return SMSSendResult(NO, senderFailure, service, SMSChatSenderAddress(chat));

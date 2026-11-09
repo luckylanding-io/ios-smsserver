@@ -26,6 +26,7 @@
 - (BOOL)sendIPCText:(NSString *)body withSubject:(NSString *)subject toAddress:(NSString *)address withAttachments:(NSArray *)paths;
 - (NSString *)sendTextReturningFailure:(NSString *)body withSubject:(NSString *)subject toAddress:(NSString *)address withAttachments:(NSArray *)paths;
 - (NSDictionary *)sendText:(NSString *)body subject:(NSString *)subject toAddress:(NSString *)address from:(NSString *)from attachments:(NSArray *)paths;
+- (NSDictionary *)sendText:(NSString *)body subject:(NSString *)subject toAddress:(NSString *)address from:(NSString *)from service:(NSString *)service attachments:(NSArray *)paths;
 - (NSArray *)getSenders;
 - (NSDictionary *)getIMessageStatus:(NSArray *)addresses;
 - (BOOL)markConvoAsRead:(NSString *)chat_id;

@@ -1,7 +1,7 @@
 Package: com.ianwelker.smserver
 Depends: openssl, com.janshai.libsmserver (>= 0.9.3)
 Name: SMServer
-Version: 0.9.5
+Version: 0.9.6
 Architecture: iphoneos-arm64
 Description: Send texts from your browser!
 Maintainer: June Welker <junewelker@gmail.com>
