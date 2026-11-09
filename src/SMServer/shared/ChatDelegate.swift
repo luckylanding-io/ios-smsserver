@@ -297,6 +297,18 @@ final class ChatDelegate {
 				texts[i]["cache_has_attachments"] = cache == "1"
 			}
 
+			if let sent = texts[i]["is_sent"] as? String {
+				texts[i]["is_sent"] = sent == "1"
+			}
+
+			if let delivered = texts[i]["is_delivered"] as? String {
+				texts[i]["is_delivered"] = delivered == "1"
+			}
+
+			if let error = texts[i]["error"] as? String {
+				texts[i]["error"] = Int(error) ?? 0
+			}
+
 			if let am_type = texts[i]["associated_message_type"] as? String {
 				texts[i]["associated_message_type"] = Int(am_type)
 			}
@@ -530,7 +542,7 @@ final class ChatDelegate {
 
 		var messages: [[String:Any]] = selectFromSql(
 			db: db,
-			columns: ["m.ROWID", "m.guid", "m.text", "m.attributedBody", "m.subject", "m.is_from_me", "m.date", "m.date_read", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "m.item_type", "m.group_action_type", "m.other_handle", "h.id"] + receivingAddressColumns(db: db),
+			columns: ["m.ROWID", "m.guid", "m.text", "m.attributedBody", "m.subject", "m.is_from_me", "m.date", "m.date_read", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "m.item_type", "m.group_action_type", "m.other_handle", "m.is_sent", "m.is_delivered", "m.error", "h.id"] + receivingAddressColumns(db: db),
 			table: "message m",
 			condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \(fixed_num)\(from_string))) order by m.date desc",
 			args: num.split(separator: ",").map({String($0)}),
@@ -1161,7 +1173,7 @@ final class ChatDelegate {
 		for _ in 0..<10 {
 			text_array = selectFromSql(
 				db: db,
-				columns: ["m.ROWID", "m.guid", "m.text", "m.attributedBody", "m.subject", "m.is_from_me", "m.date", "m.date_read", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"] + receivingAddressColumns(db: db),
+				columns: ["m.ROWID", "m.guid", "m.text", "m.attributedBody", "m.subject", "m.is_from_me", "m.date", "m.date_read", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "m.is_sent", "m.is_delivered", "m.error", "h.id", "c.chat_identifier", "c.room_name"] + receivingAddressColumns(db: db),
 				table: "message m",
 				condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.guid is ?",
 				args: [guid],
